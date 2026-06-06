@@ -2,85 +2,68 @@
 
 This project implements a Python pipeline for reconstructing 3D point clouds from multiple images using photogrammetry.
 
-The project focuses mainly on **relative orientation**, where the camera poses are estimated from image correspondences. An **absolute orientation** pipeline is also included to validate the geometric reconstruction process using known calibration points.
+The main focus is **relative orientation**, where camera poses are estimated from image correspondences, without requiring a known 3D reference frame. An **absolute orientation** part is also included to validate the geometric reconstruction pipeline using known calibration points.
 
 ---
 
 ## 1. Relative Orientation
 
-Relative orientation reconstructs a 3D scene without using a known 3D reference frame. Instead, it estimates the relative positions of the cameras from matching points detected across several images.
+Relative orientation reconstructs a 3D scene by estimating the relative positions of the cameras from matching points detected across multiple images.
 
-The pipeline is:
+The pipeline follows these steps:
 
-1. Detect feature points in the images.
-2. Match points between image pairs.
-3. Filter incorrect matches using RANSAC.
-4. Estimate the relative camera poses.
-5. Triangulate 3D points.
-6. Export and visualize the reconstructed point cloud.
+* Feature detection and matching between images
+* Geometric filtering with RANSAC
+* Camera pose estimation
+* 3D point triangulation
+* Point cloud export and visualization
 
-In this project, SIFT was used for feature detection and matching, followed by geometric filtering and triangulation.
+The method was tested on several real scenes, including a pyramid, stairs and a topographic map.
 
-### Results
+## Results
 
-The relative-orientation pipeline was tested on several real scenes.
-
-| Scene | Images | Reconstructed cameras | 3D points |
-|---|---:|---:|---:|
-| Pencil case | 18 | 18/18 | 13,182 |
-| Pyramid | 23 | 23/23 | 19,388 |
-| Stairs | 39 | 39/39 | 106,634 |
-| Topographic map | 32 | 32/32 | 391,093 |
+| Scene           | Images | Reconstructed cameras | 3D points |
+| --------------- | -----: | --------------------: | --------: |
+| Pyramid         |     23 |                 23/23 |    19,388 |
+| Stairs          |     39 |                 39/39 |   106,634 |
+| Topographic map |     32 |                 32/32 |   391,093 |
 
 The pyramid reconstruction was evaluated after scale alignment. The average relative error was about **2.47%**, corresponding to an average absolute error of about **1.5 mm**.
 
-### Example reconstructions
+## Example reconstructions
 
-#### Pyramid
+### Pyramid
 
-![Pyramid reconstruction](assets/relative_orientation/pyramid_result.png)
+![Pyramid reconstruction](assets/relative_orientation/pyramid_3D.png)
 
-#### Stairs
+### Stairs
 
-![Stairs reconstruction](assets/relative_orientation/stairs_result.png)
+![Stairs reconstruction](assets/relative_orientation/stairs_3D.png)
 
-#### Topographic map
+### Topographic map — top view
 
-![Topographic map reconstruction](assets/relative_orientation/topographic_map_result.png)
+![Topographic map reconstruction](assets/relative_orientation/map_3D.png)
 
-#### Error evaluation on the pyramid
+### Topographic map — side view
 
-![Pyramid error](assets/relative_orientation/pyramid_error.png)
+![Topographic map side view](assets/relative_orientation/side_map_3D.png)
 
 ---
 
 ## 2. Absolute Orientation
 
-Absolute orientation was used as a validation step. In this setup, some 3D calibration points are known in advance, which makes it possible to estimate the camera projection matrices directly.
+Absolute orientation was used to validate the geometric part of the reconstruction pipeline. In this case, known 3D calibration points are used to estimate camera projection matrices.
 
-The pipeline is:
+This part helped verify the main geometric steps:
 
-1. Select known 3D calibration points.
-2. Click their corresponding 2D positions in each image.
-3. Estimate the camera projection matrices using DLT.
-4. Triangulate matched points in 3D.
-5. Compare reconstructed control points with known measurements.
+* Projection
+* Camera calibration
+* Triangulation
+* Reconstruction in a known metric frame
 
-This part helped verify that the geometric core of the project — projection, calibration and triangulation — was working correctly.
+LoFTR was also tested to improve point matching on more difficult images, especially when classical local matching was unstable.
 
-LoFTR was also tested to improve point matching on difficult images, especially when SIFT produced unstable correspondences.
-
-### Cube reconstruction
-
-![Cube reconstruction](assets/absolute_orientation/cube_reconstruction.png)
-
-### Altitude error on the cube
-
-Four control points were selected on the top face of the cube. The altitude of the reconstructed points was compared with the theoretical height of the cube.
-
-The maximum altitude error was about **1.03 mm**.
-
-![Cube error heatmap](assets/absolute_orientation/cube_error_heatmap.png)
+For the cube experiment, four control points were selected on the top face. Their reconstructed altitude was compared with the theoretical height of the cube, giving a maximum altitude error of about **1.03 mm**.
 
 ---
 
@@ -93,5 +76,3 @@ Python, OpenCV, NumPy, SciPy, Matplotlib, SIFT, RANSAC, LoFTR, CloudCompare
 ## Project context
 
 Academic project at IMT Atlantique on 3D reconstruction by photogrammetry.
-
-
