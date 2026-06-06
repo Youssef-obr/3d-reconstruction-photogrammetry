@@ -24,7 +24,7 @@ The pipeline follows these steps:
 
 ---
 
-## Geometric principle
+## Geometric Principle
 
 For two images, a 3D point is projected into two corresponding image points. In homogeneous coordinates, these image points are written as:
 
@@ -50,41 +50,34 @@ $$
 \mathbf{x}_2^{\top}\mathbf{F}\mathbf{x}_1 = 0.
 $$
 
-Here, (\mathbf{F}) is the fundamental matrix. It describes the projective geometric relation between two camera views.
+Here, $\mathbf{F}$ is the fundamental matrix. It describes the projective geometric relation between two camera views.
 
-In practice, some feature matches are wrong. RANSAC is used to robustly estimate (\mathbf{F}) while rejecting outliers. It repeatedly samples small sets of matches, estimates a candidate matrix, and keeps the model that explains the largest number of consistent correspondences.
+In practice, some feature matches are wrong. RANSAC is used to robustly estimate $\mathbf{F}$ while rejecting outliers. It repeatedly samples small sets of matches, estimates a candidate fundamental matrix, and keeps the model that explains the largest number of consistent correspondences.
 
-The robust estimation problem can be written as:
+A simple way to write this is:
 
 $$
 \mathbf{F}^{\star}
 ==================
 
-\underset{\mathbf{F}}{\operatorname{argmax}}
-;
-#\left{
-i
-;:;
-d\left(\mathbf{x}*{2,i},\mathbf{F}\mathbf{x}*{1,i}\right)
-<
-\tau
-\right}.
+\arg\max_{\mathbf{F}}
+N_{\mathrm{inliers}}(\mathbf{F}).
 $$
 
 where:
 
-* (\mathbf{F}^{\star}) is the selected fundamental matrix;
-* (d) is an epipolar error;
-* (\tau) is the inlier threshold;
-* only correspondences with small geometric error are kept.
+* $\mathbf{F}^{\star}$ is the selected fundamental matrix;
+* $N_{\mathrm{inliers}}(\mathbf{F})$ is the number of matches that satisfy the epipolar constraint;
+* matches with a geometric error below a threshold $\tau$ are kept as inliers;
+* the other matches are rejected as outliers.
 
-Once the fundamental matrix is estimated, the essential matrix is computed using the intrinsic calibration matrix (\mathbf{K}):
+Once the fundamental matrix is estimated, the essential matrix is computed using the intrinsic calibration matrix $\mathbf{K}$:
 
 $$
 \mathbf{E} = \mathbf{K}^{\top}\mathbf{F}\mathbf{K}.
 $$
 
-The relative rotation and translation between the two cameras are then recovered from (\mathbf{E}). Finally, the 3D points are reconstructed by triangulation.
+The relative rotation and translation between the two cameras are then recovered from $\mathbf{E}$. Finally, the 3D points are reconstructed by triangulation.
 
 ---
 
@@ -144,11 +137,11 @@ $$
 
 where:
 
-* (\mathbf{X}) is a 3D point in homogeneous coordinates;
-* (\mathbf{x}) is its 2D image projection;
-* (\mathbf{P}) is the camera projection matrix.
+* $\mathbf{X}$ is a 3D point in homogeneous coordinates;
+* $\mathbf{x}$ is its 2D image projection;
+* $\mathbf{P}$ is the camera projection matrix.
 
-The projection matrix (\mathbf{P}) is estimated using DLT from known 3D calibration points and their corresponding 2D image positions.
+The projection matrix $\mathbf{P}$ is estimated using DLT from known 3D calibration points and their corresponding 2D image positions.
 
 This part helped validate the core geometric steps:
 
@@ -173,8 +166,8 @@ $$
 
 where:
 
-* (z_{\mathrm{rec}}) is the reconstructed altitude;
-* (z_{\mathrm{true}}) is the theoretical altitude.
+* $z_{\mathrm{rec}}$ is the reconstructed altitude;
+* $z_{\mathrm{true}}$ is the theoretical altitude.
 
 The maximum altitude error obtained was about **1.03 mm**.
 
