@@ -18,9 +18,27 @@ The pipeline follows these steps:
 * 3D point triangulation
 * Point cloud export and visualization
 
-The method was tested on several real scenes, including a pyramid, stairs and a topographic map.
+The key geometric constraint is the epipolar relation:
+
+[
+x_2^T F x_1 = 0
+]
+
+where (x_1) and (x_2) are matching points in two images, and (F) is the fundamental matrix.
+
+RANSAC is used to estimate this geometry robustly by keeping only correspondences that satisfy the epipolar constraint and rejecting outliers.
+
+Once the fundamental matrix is estimated, the essential matrix is obtained from the camera intrinsics:
+
+[
+E = K^T F K
+]
+
+The relative camera pose is then recovered from (E), and 3D points are reconstructed by triangulation.
 
 ## Results
+
+The method was tested on several real scenes, including a pyramid, stairs and a topographic map.
 
 | Scene           | Images | Reconstructed cameras | 3D points |
 | --------------- | -----: | --------------------: | --------: |
@@ -34,19 +52,19 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
 
 ### Pyramid
 
-![Pyramid reconstruction](assets/relative_orientation/pyramid_3D.png)
+<img src="assets/relative_orientation/pyramid_3D.png" width="650">
 
 ### Stairs
 
-![Stairs reconstruction](assets/relative_orientation/stairs_3D.png)
+<img src="assets/relative_orientation/stairs_3D.png" width="650">
 
 ### Topographic map — top view
 
-![Topographic map reconstruction](assets/relative_orientation/map_3D.png)
+<img src="assets/relative_orientation/map_3D.png" width="650">
 
 ### Topographic map — side view
 
-![Topographic map side view](assets/relative_orientation/side_map_3D.png)
+<img src="assets/relative_orientation/side_map_3D.png" width="650">
 
 ---
 
@@ -54,7 +72,15 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
 
 Absolute orientation was used to validate the geometric part of the reconstruction pipeline. In this case, known 3D calibration points are used to estimate camera projection matrices.
 
-This part helped verify the main geometric steps:
+The projection model is:
+
+[
+x \sim P X
+]
+
+where (X) is a 3D point, (x) its image projection, and (P) the camera projection matrix.
+
+The matrix (P) is estimated using DLT from known 3D calibration points and their 2D image positions. This part helped verify the main geometric steps:
 
 * Projection
 * Camera calibration
@@ -63,7 +89,13 @@ This part helped verify the main geometric steps:
 
 LoFTR was also tested to improve point matching on more difficult images, especially when classical local matching was unstable.
 
-For the cube experiment, four control points were selected on the top face. Their reconstructed altitude was compared with the theoretical height of the cube, giving a maximum altitude error of about **1.03 mm**.
+For the cube experiment, four control points were selected on the top face. Their reconstructed altitude was compared with the theoretical height of the cube:
+
+[
+e_z = z_{\text{rec}} - z_{\text{true}}
+]
+
+The maximum altitude error was about **1.03 mm**.
 
 ---
 
