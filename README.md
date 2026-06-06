@@ -38,11 +38,18 @@ Here, $\mathbf{F}$ is the fundamental matrix. It describes the projective geomet
 
 In practice, some feature matches are wrong. RANSAC is used to robustly estimate $\mathbf{F}$ while rejecting outliers. It repeatedly samples small sets of matches, estimates a candidate fundamental matrix, and keeps the model that explains the largest number of consistent correspondences.
 
-The number of inliers for a candidate matrix $\mathbf{F}$ can be written as:
+For a candidate fundamental matrix $\mathbf{F}$, the number of inliers can be written as:
 
-$$N_{\mathrm{inliers}}(\mathbf{F}) = #{i : d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau}.$$
+$$N_{\mathrm{inliers}}(\mathbf{F}) = \sum_{i=1}^{M} \mathbf{1}\left[d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau\right].$$
 
-RANSAC keeps the matrix $\mathbf{F}$ with the largest number of inliers, where $d$ is the epipolar error and $\tau$ is the inlier threshold.
+where:
+
+* $M$ is the number of tentative matches;
+* $d$ is the epipolar error;
+* $\tau$ is the inlier threshold;
+* $\mathbf{1}[\cdot]$ equals 1 if the condition is true and 0 otherwise.
+
+RANSAC keeps the matrix $\mathbf{F}$ with the largest number of inliers. The other matches are rejected as outliers.
 
 Once the fundamental matrix is estimated, the essential matrix is computed using the intrinsic calibration matrix $\mathbf{K}$:
 
