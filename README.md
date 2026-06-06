@@ -2,63 +2,95 @@
 
 This project implements a Python pipeline for reconstructing 3D point clouds from multiple images using photogrammetry.
 
-The main focus is **relative orientation**, where camera poses are estimated from image correspondences, without requiring a known 3D reference frame. An **absolute orientation** part is also included to validate the geometric reconstruction pipeline using known calibration points.
+The project is mainly focused on **relative orientation**, where the camera poses are estimated from correspondences between images, without using a known 3D reference frame. A second part based on **absolute orientation** is also included to validate the geometric reconstruction pipeline using known calibration points.
 
 ---
 
 ## 1. Relative Orientation
 
-Relative orientation reconstructs a 3D scene by estimating the relative positions of the cameras from matching points detected across multiple images.
+Relative orientation aims to reconstruct a 3D scene from several images by estimating the relative positions and orientations of the cameras.
+
+Unlike absolute orientation, the 3D reference frame of the object is not known in advance. The reconstruction is obtained only from correspondences between images.
 
 The pipeline follows these steps:
 
-* Feature detection and matching between images
-* Geometric filtering with RANSAC
-* Fundamental and essential matrix estimation
-* Relative camera pose recovery
-* 3D point triangulation
-* Point cloud export and visualization
+* Detect and match feature points between images
+* Remove inconsistent matches using RANSAC
+* Estimate the fundamental matrix
+* Compute the essential matrix using camera intrinsics
+* Recover the relative camera poses
+* Triangulate 3D points
+* Export and visualize the reconstructed point cloud
 
-### Geometric principle
+---
 
-For two matching image points `x1` and `x2`, the epipolar constraint is:
+## Geometric principle
 
-```text
-x2ᵀ F x1 = 0
-```
+For two images, a 3D point is projected into two corresponding image points. In homogeneous coordinates, these image points are written as:
 
-where `F` is the fundamental matrix.
+$$
+\mathbf{x}_1 =
+\begin{pmatrix}
+u_1 \
+v_1 \
+1
+\end{pmatrix},
+\qquad
+\mathbf{x}_2 =
+\begin{pmatrix}
+u_2 \
+v_2 \
+1
+\end{pmatrix}.
+$$
 
-In practice, some matches are wrong. RANSAC is used to estimate `F` robustly by keeping only the correspondences that are geometrically consistent.
+The two corresponding points must satisfy the epipolar constraint:
 
-RANSAC solves the following robust selection problem:
+$$
+\mathbf{x}_2^{\top}\mathbf{F}\mathbf{x}_1 = 0.
+$$
 
-```text
-F* = argmax_F #{ i : d(x2_i, F x1_i) < τ }
-```
+Here, (\mathbf{F}) is the fundamental matrix. It describes the projective geometric relation between two camera views.
 
-where `d` is the epipolar error and `τ` is an inlier threshold.
+In practice, some feature matches are wrong. RANSAC is used to robustly estimate (\mathbf{F}) while rejecting outliers. It repeatedly samples small sets of matches, estimates a candidate matrix, and keeps the model that explains the largest number of consistent correspondences.
 
-A common error used for this is the Sampson distance:
+The robust estimation problem can be written as:
 
-```text
-d(x2, F x1) =
-(x2ᵀ F x1)²
-/
-((F x1)_1² + (F x1)_2² + (Fᵀ x2)_1² + (Fᵀ x2)_2²)
-```
+$$
+\mathbf{F}^{\star}
+==================
 
-After estimating `F`, the essential matrix is computed using the camera intrinsic matrix `K`:
+\underset{\mathbf{F}}{\operatorname{argmax}}
+;
+#\left{
+i
+;:;
+d\left(\mathbf{x}*{2,i},\mathbf{F}\mathbf{x}*{1,i}\right)
+<
+\tau
+\right}.
+$$
 
-```text
-E = Kᵀ F K
-```
+where:
 
-The relative rotation and translation between cameras are then recovered from `E`, and 3D points are reconstructed by triangulation.
+* (\mathbf{F}^{\star}) is the selected fundamental matrix;
+* (d) is an epipolar error;
+* (\tau) is the inlier threshold;
+* only correspondences with small geometric error are kept.
 
-## Results
+Once the fundamental matrix is estimated, the essential matrix is computed using the intrinsic calibration matrix (\mathbf{K}):
 
-The method was tested on several real scenes, including a pyramid, stairs and a topographic map.
+$$
+\mathbf{E} = \mathbf{K}^{\top}\mathbf{F}\mathbf{K}.
+$$
+
+The relative rotation and translation between the two cameras are then recovered from (\mathbf{E}). Finally, the 3D points are reconstructed by triangulation.
+
+---
+
+## Relative Orientation Results
+
+The relative-orientation pipeline was tested on several real scenes.
 
 | Scene           | Images | Reconstructed cameras | 3D points |
 | --------------- | -----: | --------------------: | --------: |
@@ -68,64 +100,83 @@ The method was tested on several real scenes, including a pyramid, stairs and a 
 
 The pyramid reconstruction was evaluated after scale alignment. The average relative error was about **2.47%**, corresponding to an average absolute error of about **1.5 mm**.
 
-## Example reconstructions
+---
+
+## Example Reconstructions
 
 ### Pyramid
 
 <p align="center">
-  <img src="assets/relative_orientation/pyramid_3D.png" width="480">
+  <img src="assets/relative_orientation/pyramid_3D.png" width="420">
 </p>
 
 ### Stairs
 
 <p align="center">
-  <img src="assets/relative_orientation/stairs_3D.png" width="480">
+  <img src="assets/relative_orientation/stairs_3D.png" width="420">
 </p>
 
 ### Topographic map — top view
 
 <p align="center">
-  <img src="assets/relative_orientation/map_3D.png" width="480">
+  <img src="assets/relative_orientation/map_3D.png" width="420">
 </p>
 
 ### Topographic map — side view
 
 <p align="center">
-  <img src="assets/relative_orientation/side_map_3D.png" width="480">
+  <img src="assets/relative_orientation/side_map_3D.png" width="420">
 </p>
 
 ---
 
 ## 2. Absolute Orientation
 
-Absolute orientation was used to validate the geometric part of the reconstruction pipeline. In this case, known 3D calibration points are used to estimate camera projection matrices.
+Absolute orientation was used as a validation step for the geometric part of the project.
+
+In this case, the 3D coordinates of several calibration points are known. Their corresponding 2D positions are selected in the images, which makes it possible to estimate the camera projection matrices.
 
 The camera projection model is:
 
-```text
-x ~ P X
-```
+$$
+\mathbf{x} \sim \mathbf{P}\mathbf{X}.
+$$
 
-where `X` is a 3D point, `x` is its 2D image projection, and `P` is the camera projection matrix.
+where:
 
-The projection matrix `P` is estimated using DLT from known 3D calibration points and their corresponding 2D image positions. This allows the reconstruction to be expressed directly in a known metric frame.
+* (\mathbf{X}) is a 3D point in homogeneous coordinates;
+* (\mathbf{x}) is its 2D image projection;
+* (\mathbf{P}) is the camera projection matrix.
 
-This part helped verify the main geometric steps:
+The projection matrix (\mathbf{P}) is estimated using DLT from known 3D calibration points and their corresponding 2D image positions.
+
+This part helped validate the core geometric steps:
 
 * Projection
 * Camera calibration
 * Triangulation
 * Reconstruction in a known metric frame
 
-LoFTR was also tested to improve point matching on more difficult images, especially when classical local matching was unstable.
+LoFTR was also tested to improve point matching on difficult images, especially when classical local matching was unstable.
 
-For the cube experiment, four control points were selected on the top face. Their reconstructed altitude was compared with the theoretical height of the cube:
+---
 
-```text
-e_z = z_rec - z_true
-```
+## Absolute Orientation Error
 
-The maximum altitude error was about **1.03 mm**.
+For the cube experiment, four control points were selected on the top face. Their reconstructed altitude was compared with the theoretical cube height.
+
+The vertical error is:
+
+$$
+e_z = z_{\mathrm{rec}} - z_{\mathrm{true}}.
+$$
+
+where:
+
+* (z_{\mathrm{rec}}) is the reconstructed altitude;
+* (z_{\mathrm{true}}) is the theoretical altitude.
+
+The maximum altitude error obtained was about **1.03 mm**.
 
 ---
 
@@ -135,6 +186,6 @@ Python, OpenCV, NumPy, SciPy, Matplotlib, SIFT, RANSAC, LoFTR, CloudCompare
 
 ---
 
-## Project context
+## Project Context
 
 Academic project at IMT Atlantique on 3D reconstruction by photogrammetry.
