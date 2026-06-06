@@ -38,20 +38,11 @@ Here, $\mathbf{F}$ is the fundamental matrix. It describes the projective geomet
 
 In practice, some feature matches are wrong. RANSAC is used to robustly estimate $\mathbf{F}$ while rejecting outliers. It repeatedly samples small sets of matches, estimates a candidate fundamental matrix, and keeps the model that explains the largest number of consistent correspondences.
 
-A simple way to write this is:
+The number of inliers for a candidate matrix $\mathbf{F}$ can be written as:
 
-$$\mathbf{F}^{\star} = \operatorname*{arg,max}*{\mathbf{F}} ; N*{\mathrm{inliers}}(\mathbf{F}).$$
+$$N_{\mathrm{inliers}}(\mathbf{F}) = #{i : d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau}.$$
 
-where:
-
-* $\mathbf{F}^{\star}$ is the selected fundamental matrix;
-* $N_{\mathrm{inliers}}(\mathbf{F})$ is the number of matches that satisfy the epipolar constraint;
-* matches with a geometric error below a threshold $\tau$ are kept as inliers;
-* the other matches are rejected as outliers.
-
-More explicitly, RANSAC tries to keep the largest set of correspondences satisfying:
-
-$$d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau.$$
+RANSAC keeps the matrix $\mathbf{F}$ with the largest number of inliers, where $d$ is the epipolar error and $\tau$ is the inlier threshold.
 
 Once the fundamental matrix is estimated, the essential matrix is computed using the intrinsic calibration matrix $\mathbf{K}$:
 
@@ -121,18 +112,35 @@ where:
 
 The projection matrix $\mathbf{P}$ is estimated using DLT from known 3D calibration points and their corresponding 2D image positions.
 
-This part helped validate the core geometric steps:
+---
 
-* Projection
-* Camera calibration
-* Triangulation
-* Reconstruction in a known metric frame
+## Validation on Theoretical Data
 
-LoFTR was also tested to improve point matching on difficult images, especially when classical local matching was unstable.
+Before using automatic feature matching methods such as SIFT or LoFTR, the geometric pipeline was first validated on theoretical data.
+
+The goal was to check that the core photogrammetry algorithm works correctly when the correspondences are known. This validation includes:
+
+* projection of known 3D points into the images;
+* DLT calibration of the camera projection matrices;
+* extraction of camera parameters;
+* triangulation of the reconstructed 3D points;
+* comparison with the theoretical object.
+
+The reconstructed shield was compared with the theoretical surface, and the reconstruction error was very low: the average error was about **47.7 µm**, with a maximum error of about **106.5 µm**.
+
+This confirms that the projection, calibration and triangulation pipeline is functional. In later experiments, the main difficulty therefore comes mostly from the quality of image matching, not from the geometric model itself.
+
+<p align="center">
+  <img src="assets/absolute_orientation/shield_validation.png" width="520">
+</p>
 
 ---
 
-## Absolute Orientation Error
+## Absolute Orientation on Real Images
+
+After validating the theoretical inverse problem, the same geometric principles were applied to real images with calibration points.
+
+LoFTR was tested to improve point matching on difficult images, especially when classical local matching was unstable.
 
 For the cube experiment, four control points were selected on the top face. Their reconstructed altitude was compared with the theoretical cube height.
 
