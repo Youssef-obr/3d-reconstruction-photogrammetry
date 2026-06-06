@@ -28,27 +28,11 @@ The pipeline follows these steps:
 
 For two images, a 3D point is projected into two corresponding image points. In homogeneous coordinates, these image points are written as:
 
-$$
-\mathbf{x}_1 =
-\begin{pmatrix}
-u_1 \
-v_1 \
-1
-\end{pmatrix},
-\qquad
-\mathbf{x}_2 =
-\begin{pmatrix}
-u_2 \
-v_2 \
-1
-\end{pmatrix}.
-$$
+$$\mathbf{x}_1 = (u_1, v_1, 1)^{\top}, \qquad \mathbf{x}_2 = (u_2, v_2, 1)^{\top}.$$
 
 The two corresponding points must satisfy the epipolar constraint:
 
-$$
-\mathbf{x}_2^{\top}\mathbf{F}\mathbf{x}_1 = 0.
-$$
+$$\mathbf{x}_2^{\top}\mathbf{F}\mathbf{x}_1 = 0.$$
 
 Here, $\mathbf{F}$ is the fundamental matrix. It describes the projective geometric relation between two camera views.
 
@@ -56,13 +40,7 @@ In practice, some feature matches are wrong. RANSAC is used to robustly estimate
 
 A simple way to write this is:
 
-$$
-\mathbf{F}^{\star}
-==================
-
-\arg\max_{\mathbf{F}}
-N_{\mathrm{inliers}}(\mathbf{F}).
-$$
+$$\mathbf{F}^{\star} = \operatorname*{arg,max}*{\mathbf{F}} ; N*{\mathrm{inliers}}(\mathbf{F}).$$
 
 where:
 
@@ -71,11 +49,13 @@ where:
 * matches with a geometric error below a threshold $\tau$ are kept as inliers;
 * the other matches are rejected as outliers.
 
+More explicitly, RANSAC tries to keep the largest set of correspondences satisfying:
+
+$$d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau.$$
+
 Once the fundamental matrix is estimated, the essential matrix is computed using the intrinsic calibration matrix $\mathbf{K}$:
 
-$$
-\mathbf{E} = \mathbf{K}^{\top}\mathbf{F}\mathbf{K}.
-$$
+$$\mathbf{E} = \mathbf{K}^{\top}\mathbf{F}\mathbf{K}.$$
 
 The relative rotation and translation between the two cameras are then recovered from $\mathbf{E}$. Finally, the 3D points are reconstructed by triangulation.
 
@@ -100,25 +80,25 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
 ### Pyramid
 
 <p align="center">
-  <img src="assets/relative_orientation/pyramid_3D.png" width="420">
+  <img src="assets/relative_orientation/pyramid_3D.png" width="380">
 </p>
 
 ### Stairs
 
 <p align="center">
-  <img src="assets/relative_orientation/stairs_3D.png" width="420">
+  <img src="assets/relative_orientation/stairs_3D.png" width="380">
 </p>
 
 ### Topographic map — top view
 
 <p align="center">
-  <img src="assets/relative_orientation/map_3D.png" width="420">
+  <img src="assets/relative_orientation/map_3D.png" width="380">
 </p>
 
 ### Topographic map — side view
 
 <p align="center">
-  <img src="assets/relative_orientation/side_map_3D.png" width="420">
+  <img src="assets/relative_orientation/side_map_3D.png" width="380">
 </p>
 
 ---
@@ -131,9 +111,7 @@ In this case, the 3D coordinates of several calibration points are known. Their 
 
 The camera projection model is:
 
-$$
-\mathbf{x} \sim \mathbf{P}\mathbf{X}.
-$$
+$$\mathbf{x} \sim \mathbf{P}\mathbf{X}.$$
 
 where:
 
@@ -160,9 +138,7 @@ For the cube experiment, four control points were selected on the top face. Thei
 
 The vertical error is:
 
-$$
-e_z = z_{\mathrm{rec}} - z_{\mathrm{true}}.
-$$
+$$e_z = z_{\mathrm{rec}} - z_{\mathrm{true}}.$$
 
 where:
 
