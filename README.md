@@ -14,27 +14,47 @@ The pipeline follows these steps:
 
 * Feature detection and matching between images
 * Geometric filtering with RANSAC
-* Camera pose estimation
+* Fundamental and essential matrix estimation
+* Relative camera pose recovery
 * 3D point triangulation
 * Point cloud export and visualization
 
-The key geometric constraint is the epipolar relation:
+### Geometric principle
 
-[
-x_2^T F x_1 = 0
-]
+For two matching image points `x1` and `x2`, the epipolar constraint is:
 
-where (x_1) and (x_2) are matching points in two images, and (F) is the fundamental matrix.
+```text
+x2ᵀ F x1 = 0
+```
 
-RANSAC is used to estimate this geometry robustly by keeping only correspondences that satisfy the epipolar constraint and rejecting outliers.
+where `F` is the fundamental matrix.
 
-Once the fundamental matrix is estimated, the essential matrix is obtained from the camera intrinsics:
+In practice, some matches are wrong. RANSAC is used to estimate `F` robustly by keeping only the correspondences that are geometrically consistent.
 
-[
-E = K^T F K
-]
+RANSAC solves the following robust selection problem:
 
-The relative camera pose is then recovered from (E), and 3D points are reconstructed by triangulation.
+```text
+F* = argmax_F #{ i : d(x2_i, F x1_i) < τ }
+```
+
+where `d` is the epipolar error and `τ` is an inlier threshold.
+
+A common error used for this is the Sampson distance:
+
+```text
+d(x2, F x1) =
+(x2ᵀ F x1)²
+/
+((F x1)_1² + (F x1)_2² + (Fᵀ x2)_1² + (Fᵀ x2)_2²)
+```
+
+After estimating `F`, the essential matrix is computed using the camera intrinsic matrix `K`:
+
+```text
+E = Kᵀ F K
+```
+
+The relative rotation and translation between cameras are then recovered from `E`, and 3D points are reconstructed by triangulation.
 
 ## Results
 
@@ -52,19 +72,27 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
 
 ### Pyramid
 
-<img src="assets/relative_orientation/pyramid_3D.png" width="650">
+<p align="center">
+  <img src="assets/relative_orientation/pyramid_3D.png" width="480">
+</p>
 
 ### Stairs
 
-<img src="assets/relative_orientation/stairs_3D.png" width="650">
+<p align="center">
+  <img src="assets/relative_orientation/stairs_3D.png" width="480">
+</p>
 
 ### Topographic map — top view
 
-<img src="assets/relative_orientation/map_3D.png" width="650">
+<p align="center">
+  <img src="assets/relative_orientation/map_3D.png" width="480">
+</p>
 
 ### Topographic map — side view
 
-<img src="assets/relative_orientation/side_map_3D.png" width="650">
+<p align="center">
+  <img src="assets/relative_orientation/side_map_3D.png" width="480">
+</p>
 
 ---
 
@@ -72,15 +100,17 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
 
 Absolute orientation was used to validate the geometric part of the reconstruction pipeline. In this case, known 3D calibration points are used to estimate camera projection matrices.
 
-The projection model is:
+The camera projection model is:
 
-[
-x \sim P X
-]
+```text
+x ~ P X
+```
 
-where (X) is a 3D point, (x) its image projection, and (P) the camera projection matrix.
+where `X` is a 3D point, `x` is its 2D image projection, and `P` is the camera projection matrix.
 
-The matrix (P) is estimated using DLT from known 3D calibration points and their 2D image positions. This part helped verify the main geometric steps:
+The projection matrix `P` is estimated using DLT from known 3D calibration points and their corresponding 2D image positions. This allows the reconstruction to be expressed directly in a known metric frame.
+
+This part helped verify the main geometric steps:
 
 * Projection
 * Camera calibration
@@ -91,9 +121,9 @@ LoFTR was also tested to improve point matching on more difficult images, especi
 
 For the cube experiment, four control points were selected on the top face. Their reconstructed altitude was compared with the theoretical height of the cube:
 
-[
-e_z = z_{\text{rec}} - z_{\text{true}}
-]
+```text
+e_z = z_rec - z_true
+```
 
 The maximum altitude error was about **1.03 mm**.
 
