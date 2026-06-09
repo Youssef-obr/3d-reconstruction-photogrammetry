@@ -49,7 +49,7 @@ where:
 * $M$ is the number of tentative matches;
 * $d$ is the epipolar error;
 * $\tau$ is the inlier threshold;
-* $I[\cdot]$ equals 1 if the condition is true and 0 otherwise.
+* $I[\cdot]$ is the indicator function.
 
 RANSAC keeps the matrix $\mathbf{F}$ with the largest number of inliers. The other matches are rejected as outliers.
 
@@ -86,7 +86,7 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
 ### Pyramid
 
 <p align="center">
-  <img src="assets/relative_orientation/pyramid_3D.png" width="380" height="250">
+  <img src="assets/relative_orientation/pyramid_3D.png" width="380">
 </p>
 
 ### Stairs & Bike
@@ -212,6 +212,18 @@ The maximum altitude error obtained was about **1.03 mm**, which shows that the 
 ## Technologies
 
 Python, OpenCV, NumPy, SciPy, Matplotlib, SIFT, RANSAC, LoFTR, CloudCompare
+
+---
+
+## Code
+
+The main scripts used for the experiments are available in the `src/` folder.
+
+---
+
+## Notes
+
+This repository is intended as a project presentation rather than a fully packaged software library.
 
 ---
 
