@@ -217,7 +217,12 @@ Python, OpenCV, NumPy, SciPy, Matplotlib, SIFT, RANSAC, LoFTR, CloudCompare
 
 ## Code
 
-The main scripts used for the experiments are available in the `src/` folder.
+For the relative-orientation reconstruction, the folder `images_multivues` must be placed in the same directory as the script `reconstruction_incrementale.py`.
+
+
+relative_orientation/
+├── reconstruction_incrementale.py
+└── images_multivues/
 
 ---
 
