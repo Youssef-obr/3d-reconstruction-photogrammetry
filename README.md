@@ -95,13 +95,13 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
   <img src="assets/relative_orientation/stairs_3D.png" width="380">
 </p>
 
-### Topographic map — top view
+### Topographic map of Mont Blanc — top view
 
 <p align="center">
   <img src="assets/relative_orientation/map_3D.png" width="380">
 </p>
 
-### Topographic map — side view
+### Topographic map of Mont Blanc — side view
 
 <p align="center">
   <img src="assets/relative_orientation/side_map_3D.png" width="380">
