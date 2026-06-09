@@ -22,6 +22,8 @@ The pipeline follows these steps:
 * Triangulate 3D points
 * Export and visualize the reconstructed point cloud
 
+In this part, feature matching was mainly done with **SIFT**. SIFT detects local keypoints in an image and describes them using local gradient information, usually summarized as orientation histograms around each point. This makes it useful for matching textured regions across different views.
+
 ---
 
 ## Geometric Principle
@@ -40,16 +42,22 @@ In practice, some feature matches are wrong. RANSAC is used to robustly estimate
 
 For a candidate fundamental matrix $\mathbf{F}$, the number of inliers can be written as:
 
-$$N_{\mathrm{inliers}}(\mathbf{F}) = \sum_{i=1}^{M} \mathbf{1}[d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau].$$
+$$N_{inliers}(\mathbf{F}) = \sum_{i=1}^{M} I[d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau].$$
 
 where:
 
 * $M$ is the number of tentative matches;
 * $d$ is the epipolar error;
 * $\tau$ is the inlier threshold;
-* $\mathbf{1}[\cdot]$ equals 1 if the condition is true and 0 otherwise.
+* $I[\cdot]$ equals 1 if the condition is true and 0 otherwise.
 
 RANSAC keeps the matrix $\mathbf{F}$ with the largest number of inliers. The other matches are rejected as outliers.
+
+For each RANSAC candidate, the fundamental matrix can be estimated from point correspondences by writing the epipolar constraints as a linear system:
+
+$$\mathbf{A}\mathbf{f} = 0.$$
+
+The vector $\mathbf{f}$ contains the coefficients of $\mathbf{F}$. This homogeneous least-squares problem is typically solved using **Singular Value Decomposition (SVD)** by selecting the singular vector associated with the smallest singular value, then reshaping it into the matrix $\mathbf{F}$.
 
 Once the fundamental matrix is estimated, the essential matrix is computed using the intrinsic calibration matrix $\mathbf{K}$:
 
@@ -147,9 +155,9 @@ This confirms that the projection, calibration and triangulation pipeline is fun
 
 ## Absolute Orientation with LoFTR
 
-After validating the base geometric algorithm, LoFTR was added to automatically match points between real images.
+After validating the base geometric algorithm, **LoFTR** was added to automatically match points between real images.
 
-SIFT was first tested, but it did not provide sufficiently stable correspondences for the absolute-orientation setup, especially on low-texture areas and repeated patterns. LoFTR gave more reliable matches by using a more global image-matching strategy.
+SIFT was first tested, but it did not provide sufficiently stable correspondences for the absolute-orientation setup, especially on low-texture areas and repeated patterns. LoFTR gave more reliable matches by using a neural-network-based approach. Instead of relying only on local keypoints and gradient descriptors, LoFTR uses convolutional features and transformer-based attention to match image regions with more global context.
 
 The absolute-orientation pipeline with LoFTR follows these steps:
 
@@ -180,7 +188,9 @@ For better results, the image acquisition should be done with several views, ide
 
 ## Absolute Orientation Error
 
-To evaluate the cube reconstruction, four control points were selected on the letter **Z** located on the top face of the cube. These points were reconstructed in 3D, and their altitude was compared with the theoretical altitude of the top face.
+To evaluate the cube reconstruction, four control points were selected on the letter **Z** located on the top face of the cube. The cube has an edge length of **40 mm**.
+
+These points were reconstructed in 3D, and their altitude was compared with the theoretical altitude of the top face.
 
 The vertical error is:
 
