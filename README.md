@@ -219,11 +219,6 @@ Python, OpenCV, NumPy, SciPy, Matplotlib, SIFT, RANSAC, LoFTR, CloudCompare
 
 For the relative-orientation reconstruction, the folder `images_multivues` must be placed in the same directory as the script `reconstruction_incrementale.py`.
 
-
-relative_orientation/
-├── reconstruction_incrementale.py
-└── images_multivues/
-
 ---
 
 ## Notes
