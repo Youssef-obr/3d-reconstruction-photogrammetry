@@ -2,7 +2,7 @@
 
 This project implements a Python pipeline for reconstructing 3D point clouds from multiple images using photogrammetry.
 
-The project is mainly focused on **relative orientation**, where the camera poses are estimated from correspondences between images, without using a known 3D reference frame. A second part based on **absolute orientation** is also included to validate the geometric reconstruction pipeline using known calibration points.
+The project is mainly focused on **relative orientation**, where the camera poses are estimated from correspondences between images, without using a known 3D reference frame. A second part based on **absolute orientation** is also included to validate and apply the geometric reconstruction pipeline using known calibration points.
 
 ---
 
@@ -28,11 +28,11 @@ The pipeline follows these steps:
 
 For two images, a 3D point is projected into two corresponding image points. In homogeneous coordinates, these image points are written as:
 
-$$\mathbf{x}_1 = (u_1, v_1, 1)^{\top}, \qquad \mathbf{x}_2 = (u_2, v_2, 1)^{\top}.$$
+$$\mathbf{x}_1 = (u_1, v_1, 1)^T, \qquad \mathbf{x}_2 = (u_2, v_2, 1)^T.$$
 
 The two corresponding points must satisfy the epipolar constraint:
 
-$$\mathbf{x}_2^{\top}\mathbf{F}\mathbf{x}_1 = 0.$$
+$$\mathbf{x}_2^T \mathbf{F}\mathbf{x}_1 = 0.$$
 
 Here, $\mathbf{F}$ is the fundamental matrix. It describes the projective geometric relation between two camera views.
 
@@ -40,7 +40,7 @@ In practice, some feature matches are wrong. RANSAC is used to robustly estimate
 
 For a candidate fundamental matrix $\mathbf{F}$, the number of inliers can be written as:
 
-$$N_{\mathrm{inliers}}(\mathbf{F}) = \sum_{i=1}^{M} \mathbf{1}\left[d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau\right].$$
+$$N_{\mathrm{inliers}}(\mathbf{F}) = \sum_{i=1}^{M} \mathbf{1}[d(\mathbf{x}*{2,i}, \mathbf{F}\mathbf{x}*{1,i}) < \tau].$$
 
 where:
 
@@ -53,7 +53,7 @@ RANSAC keeps the matrix $\mathbf{F}$ with the largest number of inliers. The oth
 
 Once the fundamental matrix is estimated, the essential matrix is computed using the intrinsic calibration matrix $\mathbf{K}$:
 
-$$\mathbf{E} = \mathbf{K}^{\top}\mathbf{F}\mathbf{K}.$$
+$$\mathbf{E} = \mathbf{K}^T \mathbf{F}\mathbf{K}.$$
 
 The relative rotation and translation between the two cameras are then recovered from $\mathbf{E}$. Finally, the 3D points are reconstructed by triangulation.
 
@@ -103,9 +103,9 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
 
 ## 2. Absolute Orientation
 
-Absolute orientation was used as a validation step for the geometric part of the project.
+Absolute orientation was used to reconstruct objects in a known metric frame.
 
-In this case, the 3D coordinates of several calibration points are known. Their corresponding 2D positions are selected in the images, which makes it possible to estimate the camera projection matrices.
+In this setup, several 3D calibration points are known in advance. Their corresponding 2D positions are manually selected in each image. From these 2D/3D correspondences, the camera projection matrices are estimated, then matched image points are triangulated to obtain their 3D coordinates.
 
 The camera projection model is:
 
@@ -143,13 +143,42 @@ This confirms that the projection, calibration and triangulation pipeline is fun
 
 ---
 
-## Absolute Orientation on Real Images
+## Absolute Orientation with LoFTR
 
-After validating the theoretical inverse problem, the same geometric principles were applied to real images with calibration points.
+After validating the base geometric algorithm, LoFTR was added to automatically match points between real images.
 
-LoFTR was tested to improve point matching on difficult images, especially when classical local matching was unstable.
+SIFT was first tested, but it did not provide sufficiently stable correspondences for the absolute-orientation setup, especially on low-texture areas and repeated patterns. LoFTR gave more reliable matches by using a more global image-matching strategy.
 
-For the cube experiment, four control points were selected on the top face. Their reconstructed altitude was compared with the theoretical cube height.
+The absolute-orientation pipeline with LoFTR follows these steps:
+
+* manually select the calibration points in each image;
+* estimate the camera projection matrices from the calibration points;
+* use LoFTR to find corresponding points between images;
+* triangulate the matched points into 3D;
+* remove incoherent reconstructed points using geometric filtering;
+* visualize the final 3D point cloud.
+
+Since LoFTR is not perfectly accurate, some reconstructed points can still be incoherent. A filtering step is therefore needed to remove points that are too far from the expected object region or inconsistent with the reconstructed scene.
+
+For better results, the image acquisition should be done with several views, ideally around **10 to 15 pictures**, while slowly rotating around the object. This increases overlap between views and improves the stability of the reconstruction.
+
+### LoFTR matching
+
+<p align="center">
+  <img src="assets/absolute_orientation/LoFTR.png" width="520">
+</p>
+
+### Cube reconstruction
+
+<p align="center">
+  <img src="assets/absolute_orientation/cube.png" width="520">
+</p>
+
+---
+
+## Absolute Orientation Error
+
+To evaluate the cube reconstruction, four control points were selected on the letter **Z** located on the top face of the cube. These points were reconstructed in 3D, and their altitude was compared with the theoretical altitude of the top face.
 
 The vertical error is:
 
@@ -160,7 +189,11 @@ where:
 * $z_{\mathrm{rec}}$ is the reconstructed altitude;
 * $z_{\mathrm{true}}$ is the theoretical altitude.
 
-The maximum altitude error obtained was about **1.03 mm**.
+The maximum altitude error obtained was about **1.03 mm**, which shows that the reconstructed height is close to the real one.
+
+<p align="center">
+  <img src="assets/absolute_orientation/heatmap.png" width="420">
+</p>
 
 ---
 
