@@ -107,6 +107,8 @@ Absolute orientation was used to reconstruct objects in a known metric frame.
 
 In this setup, several 3D calibration points are known in advance. Their corresponding 2D positions are manually selected in each image. From these 2D/3D correspondences, the camera projection matrices are estimated, then matched image points are triangulated to obtain their 3D coordinates.
 
+This makes absolute orientation useful not only for 3D reconstruction, but also for obtaining approximate measurements of objects placed in a known reference frame. In this project, the calibration points were selected manually, but this step could later be automated using a detection algorithm for reference markers or object keypoints.
+
 The camera projection model is:
 
 $$\mathbf{x} \sim \mathbf{P}\mathbf{X}.$$
