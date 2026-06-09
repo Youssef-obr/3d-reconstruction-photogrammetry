@@ -86,7 +86,7 @@ The pyramid reconstruction was evaluated after scale alignment. The average rela
 ### Pyramid
 
 <p align="center">
-  <img src="assets/relative_orientation/pyramid_3D.png" width="500">
+  <img src="assets/relative_orientation/pyramid_3D.png" width="380" height="180">
 </p>
 
 ### Stairs & Bike
